@@ -62,6 +62,7 @@ public class FilesParsingTest {
             }
         }
     }
+
     @Test
     void zipTest() throws Exception {
 
@@ -95,6 +96,7 @@ public class FilesParsingTest {
                 try (InputStream is = zipFile.getInputStream(zipEntry)) {
                     PDF pdf = new PDF(is);
                     assertThat(pdf.author).contains("Matthias Merdes");
+
                 }
             }
 
