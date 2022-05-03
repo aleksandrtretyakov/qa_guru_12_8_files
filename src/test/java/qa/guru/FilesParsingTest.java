@@ -7,6 +7,7 @@ import com.opencsv.CSVReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -16,7 +17,7 @@ import static com.codeborne.selenide.Selectors.byText;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class FilesParsingTest {
-    ClassLoader cl = FilesParsingTest.class.getClassLoader();
+    ClassLoader cl = getClass().getClassLoader();
 
     @Test
     void parsePdfTest() throws IOException {
@@ -61,27 +62,43 @@ public class FilesParsingTest {
             }
         }
     }
-
     @Test
-    void zipFileTest() throws Exception {
+    void zipTest() throws Exception {
 
-        ZipFile zipFile = new ZipFile(new File(cl.getResource("files/sample-zip-file.zip").toURI()));
+        ZipFile zipFile = new ZipFile(new File(cl.getResource("sample-zip-file.zip").toURI()));
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
 
-        try (InputStream is = cl.getResourceAsStream("files/crash_catalonia.csv");
-             CSVReader reader = new CSVReader(new InputStreamReader(is))) {
-            List<String[]> content = reader.readAll();
-            assertThat(content.get(0)).contains("Day of Week", "Number of Crashes");
-        }
+            ZipEntry zipEntry = entries.nextElement();
+            String fileName = zipEntry.getName();
 
-        try (InputStream xlsInputStream = zipFile.getInputStream(zipFile.getEntry("files/TehresursPrice.xls"))) {
-            XLS parsed = new XLS(xlsInputStream);
-            assertThat(parsed.excel.getSheetAt(0).getRow(9).getCell(0).getStringCellValue())
-                    .isEqualTo("Lincoln");
-        }
+            if (fileName.equals("TehresursPrice.xls")) {
+                try (InputStream is = zipFile.getInputStream(zipEntry)) {
+                    XLS xls = new XLS(is);
+                    assertThat(xls.excel
+                            .getSheetAt(0)
+                            .getRow(9)
+                            .getCell(0)
+                            .getStringCellValue()).contains("Lincoln");
+                }
+            }
 
-        try (InputStream pdfInputStream = zipFile.getInputStream(zipFile.getEntry("files/junit-user-guide-5.8.2.pdf"))) {
-            PDF parsed = new PDF(pdfInputStream);
-            assertThat(parsed.author).contains("Matthias Merdes");
+            if (fileName.equals("crash_catalonia.csv")) {
+                try (InputStream is = zipFile.getInputStream(zipEntry)) {
+                    CSVReader reader = new CSVReader(new InputStreamReader(is));
+                    List<String[]> content = reader.readAll();
+                    assertThat(content.get(0)).contains("Day of Week", "Number of Crashes");
+                }
+            }
+
+            if (fileName.equals("junit-user-guide-5.8.2.pdf")) {
+                try (InputStream is = zipFile.getInputStream(zipEntry)) {
+                    PDF pdf = new PDF(is);
+                    assertThat(pdf.author).contains("Matthias Merdes");
+                }
+            }
+
         }
     }
 }
+
