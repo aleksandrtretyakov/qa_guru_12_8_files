@@ -66,7 +66,7 @@ public class FilesParsingTest {
     @Test
     void zipTest() throws Exception {
 
-        ZipFile zipFile = new ZipFile(new File(cl.getResource("sample-zip-file.zip").toURI()));
+        ZipFile zipFile = new ZipFile(new File(cl.getResource("files/HW.zip").toURI()));
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
         while (entries.hasMoreElements()) {
 
